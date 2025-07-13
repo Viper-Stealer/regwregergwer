@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram GIFi Marketplace</title>
+  <style>
+    :root {
+      --tg-theme-bg-color: #0f0f0f;
+      --tg-theme-text-color: #ffffff;
+      --tg-theme-hint-color: #aaaaaa;
+      --tg-theme-link-color: #5ac8fa;
+      --tg-theme-button-color: #5ac8fa;
+      --tg-theme-button-text-color: #ffffff;
+      --tg-theme-secondary-bg-color: #1e1e1e;
+      --tg-accent-color: #5ac8fa;
+      --tg-danger-color: #ff3b30;
+      --tg-success-color: #34c759;
+      --tg-warning-color: #ff9500;
+    }
+    
+    * {
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+    
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--tg-theme-bg-color);
+      color: var(--tg-theme-text-color);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .header {
+      padding: 16px;
+      font-size: 22px;
+      font-weight: 700;
+      background-color: var(--tg-theme-secondary-bg-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .header-btn {
+      background: none;
+      border: none;
+      color: var(--tg-theme-hint-color);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    
+    .header-btn.active {
+      color: var(--tg-theme-button-color);
+    }
+    
+    .filters {
+      display: flex;
+      overflow-x: auto;
+      padding: 12px 16px;
+      background-color: var(--tg-theme-secondary-bg-color);
+      gap: 12px;
+      position: sticky;
+      top: 60px;
+      z-index: 99;
+      scrollbar-width: none;
+    }
+    
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 100px;
+    }
+    
+    .filter-label {
+      font-size: 12px;
+      color: var(--tg-theme-hint-color);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    
+    .filter-select {
+      background-color: var(--tg-theme-bg-color);
+      color: var(--tg-theme-text-color);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--tg-theme-button-color);
+    }
+    
+    .nft-list {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 90px;
+    }
+    
+    .nft-card {
+      background-color: var(--tg-theme-secondary-bg-color);
+      border-radius: 16px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transform: translateY(0);
+    }
+    
+    .nft-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    .nft-image-container {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-bottom: 100%;
+      overflow: hidden;
+    }
+    
+    .nft-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    .nft-card:hover .nft-image {
+      transform: scale(1.05);
+    }
+    
+    .nft-info {
+      padding: 12px;
+    }
+    
+    .nft-name {
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .nft-price {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .price-value {
+      font-weight: 700;
+      color: var(--tg-theme-button-color);
+      font-size: 16px;
+    }
+    
+    .price-change {
+      color: var(--tg-danger-color);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .price-up {
+      color: var(--tg-success-color);
+    }
+    
+    .new-badge {
+      background-color: var(--tg-danger-color);
+      color: white;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+      font-weight: 700;
+      display: inline-block;
+      transform: translateY(-2px);
+    }
+    
+    .trending-badge {
+      background-color: var(--tg-warning-color);
+      color: white;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+      font-weight: 700;
+      display: inline-block;
+      transform: translateY(-2px);
+    }
+    
+    .multiplier {
+      color: var(--tg-theme-hint-color);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .footer-tabs {
+      display: flex;
+      justify-content: space-around;
+      background-color: var(--tg-theme-secondary-bg-color);
+      padding: 12px 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 1px solid #333;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+    
+    .tab-btn {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: transparent;
+      color: var(--tg-theme-hint-color);
+      border: none;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .tab-btn.active {
+      color: var(--tg-theme-button-color);
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      width: 6px;
+      height: 6px;
+      background-color: var(--tg-theme-button-color);
+      border-radius: 50%;
+    }
+    
+    .tab-btn i {
+      font-size: 22px;
+      margin-bottom: 5px;
+    }
+    
+    .content-section {
+      display: none;
+      padding: 16px;
+      margin-bottom: 90px;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .content-section.active {
+      display: block;
+    }
+    
+    .business-message {
+      text-align: center;
+      margin-top: 60px;
+      padding: 0 16px;
+    }
+    
+    .business-icon {
+      font-size: 60px;
+      color: var(--tg-theme-button-color);
+      margin-bottom: 24px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .business-message h2 {
+      margin-bottom: 12px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    
+    .business-message p {
+      color: var(--tg-theme-hint-color);
+      margin-bottom: 24px;
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .connect-btn {
+      background-color: var(--tg-theme-button-color);
+      color: var(--tg-theme-button-text-color);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(90, 200, 250, 0.3);
+    }
+    
+    .connect-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(90, 200, 250, 0.4);
+    }
+    
+    .connect-btn:active {
+      transform: translateY(0);
+    }
+    
+    .buy-btn {
+      background-color: var(--tg-theme-button-color);
+      color: var(--tg-theme-button-text-color);
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(90, 200, 250, 0.3);
+    }
+    
+    .buy-btn:hover {
+      background-color: #4ab7e8;
+    }
+    
+    .buy-btn:active {
+      transform: scale(0.98);
+    }
+    
+    .search-bar {
+      padding: 16px;
+      background-color: var(--tg-theme-secondary-bg-color);
+      position: sticky;
+      top: 60px;
+      z-index: 99;
+    }
+    
+    .search-input {
+      width: 100%;
+      background-color: var(--tg-theme-bg-color);
+      color: var(--tg-theme-text-color);
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--tg-theme-button-color);
+    }
+    
+    .badge-container {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    
+    .discount-tag {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background-color: var(--tg-success-color);
+      color: white;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+      z-index: 2;
+    }
+    
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(90, 200, 250, 0.2);
+      border-top: 4px solid var(--tg-theme-button-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal-content {
+      background-color: var(--tg-theme-secondary-bg-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 700;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--tg-theme-hint-color);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .modal-body {
+      padding: 16px;
+    }
+    
+    .modal-image {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .modal-details {
+      margin-bottom: 16px;
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #333;
+    }
+    
+    .detail-label {
+      color: var(--tg-theme-hint-color);
+    }
+    
+    .detail-value {
+      font-weight: 600;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    
+    .modal-btn-primary {
+      background-color: var(--tg-theme-button-color);
+      color: var(--tg-theme-button-text-color);
+      border: none;
+    }
+    
+    .modal-btn-secondary {
+      background-color: transparent;
+      color: var(--tg-theme-button-color);
+      border: 1px solid var(--tg-theme-button-color);
+    }
+    
+    /* Image upload styles */
+    .upload-container {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      left: 16px;
+      right: 16px;
+      background-color: var(--tg-theme-secondary-bg-color);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+    
+    .upload-container.active {
+      display: block;
+    }
+    
+    .upload-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .upload-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .upload-close {
+      background: none;
+      border: none;
+      color: var(--tg-theme-hint-color);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    
+    .upload-input {
+      display: none;
+    }
+    
+    .upload-label {
+      display: block;
+      background-color: var(--tg-theme-button-color);
+      color: var(--tg-theme-button-text-color);
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    
+    .upload-preview {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .upload-preview.active {
+      display: block;
+    }
+    
+    .upload-confirm {
+      background-color: var(--tg-success-color);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      width: 100%;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .upload-confirm.active {
+      display: block;
+    }
+    
+    /* Purchase modal styles */
+    .purchase-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .purchase-modal.active {
+      display: flex;
+    }
+    
+    .purchase-content {
+      background-color: var(--tg-theme-secondary-bg-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .purchase-image {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 0 auto 20px;
+    }
+    
+    .purchase-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .purchase-price {
+      font-size: 18px;
+      color: var(--tg-theme-button-color);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    
+    .purchase-message {
+      color: var(--tg-theme-hint-color);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .purchase-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .purchase-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .purchase-btn-primary {
+      background-color: var(--tg-theme-button-color);
+      color: var(--tg-theme-button-text-color);
+      border: none;
+    }
+    
+    .purchase-btn-secondary {
+      background-color: transparent;
+      color: var(--tg-theme-button-color);
+      border: 1px solid var(--tg-theme-button-color);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 400px) {
+      .nft-list {
+        grid-template-columns: 1fr;
+      }
+      
+      .tab-btn {
+        width: 56px;
+        height: 56px;
+      }
+      
+      .tab-btn i {
+        font-size: 20px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="header" id="header">
+    <span id="header-title">Маркет</span>
+    <div class="header-actions">
+      <button class="header-btn" id="search-btn"><i class="fas fa-search"></i></button>
+      <button class="header-btn" id="cart-btn"><i class="fas fa-shopping-cart"></i></button>
+      <button class="header-btn" id="upload-btn"><i class="fas fa-plus"></i></button>
+    </div>
+  </div>
+  
+  <div class="search-bar" id="search-bar" style="display: none;">
+    <input type="text" class="search-input" placeholder="Поиск подарков...">
+  </div>
+  
+  <!-- Market Section -->
+  <div class="content-section active" id="market-section">
+    <div class="filters">
+      <div class="filter-group">
+        <div class="filter-label">Категория</div>
+        <select class="filter-select">
+          <option>Все</option>
+          <option>Новые</option>
+          <option>Популярные</option>
+          <option>Лимитированные</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <div class="filter-label">Цена</div>
+        <select class="filter-select">
+          <option>Любая</option>
+          <option>До 100₽</option>
+          <option>100-500₽</option>
+          <option>Свыше 500₽</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <div class="filter-label">Сортировка</div>
+        <select class="filter-select">
+          <option>Популярные</option>
+          <option>Новые</option>
+          <option>Цена: по возрастанию</option>
+          <option>Цена: по убыванию</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="nft-list" id="nft-list">
+      <!-- NFT items will be loaded here -->
+    </div>
+  </div>
+  
+  <!-- Auctions Section -->
+  <div class="content-section" id="auctions-section">
+    <div class="business-message">
+      <i class="fas fa-gavel business-icon"></i>
+      <h2>Премиум Аукционы</h2>
+      <p>Для участия в эксклюзивных аукционах и доступа к редким коллекционным предметам, подключите свой Telegram Business аккаунт. Наш маркетплейс не взимает дополнительных комиссий за аукционные сделки.</p>
+      <button class="connect-btn" onclick="connectBusinessAccount()">Подключить бизнес-аккаунт</button>
+    </div>
+  </div>
+  
+  <!-- MyGifts Section -->
+  <div class="content-section" id="mygifts-section">
+    <div class="business-message">
+      <i class="fas fa-gift business-icon"></i>
+      <h2>Ваша коллекция подарков</h2>
+      <p>Для просмотра и передачи купленных подарков подключите свой Telegram Business аккаунт. После подключения обновите страницу, чтобы увидеть свою коллекцию. Мы не берем комиссию за передачу подарков.</p>
+      <button class="connect-btn" onclick="connectBusinessAccount()">Подключить бизнес-аккаунт</button>
+    </div>
+  </div>
+  
+  <!-- GIFi Section -->
+  <div class="content-section" id="gifi-section">
+    <div class="business-message">
+      <i class="fas fa-images business-icon"></i>
+      <h2>Коллекция GIFi</h2>
+      <p>Получите доступ к своей персональной коллекции GIFi, подключив Telegram Business аккаунт. Управляйте и организуйте свои цифровые активы в одном месте без комиссий платформы.</p>
+      <button class="connect-btn" onclick="connectBusinessAccount()">Подключить бизнес-аккаунт</button>
+    </div>
+  </div>
+  
+  <!-- Activity Section -->
+  <div class="content-section" id="activity-section">
+    <div class="business-message">
+      <i class="fas fa-chart-line business-icon"></i>
+      <h2>Ваша активность</h2>
+      <p>Отслеживайте свои покупки, продажи и рыночную активность, подключив Telegram Business аккаунт. Получайте детальную аналитику и статистику по вашим коллекционным предметам.</p>
+      <button class="connect-btn" onclick="connectBusinessAccount()">Подключить бизнес-аккаунт</button>
+    </div>
+  </div>
+  
+  <div class="footer-tabs">
+    <button class="tab-btn active" onclick="switchTab('market')">
+      <i class="fas fa-store"></i>
+      <span>Маркет</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('auctions')">
+      <i class="fas fa-gavel"></i>
+      <span>Аукционы</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('mygifts')">
+      <i class="fas fa-gift"></i>
+      <span>Мои подарки</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('gifi')">
+      <i class="fas fa-images"></i>
+      <span>GIFi</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('activity')">
+      <i class="fas fa-chart-line"></i>
+      <span>Активность</span>
+    </button>
+  </div>
+
+  <!-- NFT Details Modal -->
+  <div class="modal-overlay" id="nft-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modal-title">Детали подарка</span>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <img id="modal-image" src="" class="modal-image" alt="NFT Image">
+        <div class="modal-details">
+          <div class="detail-row">
+            <span class="detail-label">Модель</span>
+            <span class="detail-value" id="model-value">Brain Freeze (3%)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Символ</span>
+            <span class="detail-value" id="symbol-value">Autumn Leaves (2.4%)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Фон</span>
+            <span class="detail-value" id="backdrop-value">Desert Sand (1.5%)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Доступно</span>
+            <span class="detail-value" id="mintable-value">13 Days, 5 Hours, 7 Minutes</span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary">Установить как статус</button>
+          <button class="modal-btn modal-btn-primary" id="modal-buy-btn">Купить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purchase Modal -->
+  <div class="purchase-modal" id="purchase-modal">
+    <div class="purchase-content">
+      <img id="purchase-image" src="" class="purchase-image" alt="Purchase Image">
+      <h3 class="purchase-title" id="purchase-title">Хрустальный шар</h3>
+      <div class="purchase-price" id="purchase-price">1 250 ₽</div>
+      <p class="purchase-message">Для покупки этого подарка необходимо подключить Telegram Business аккаунт. После подключения вы сможете совершать покупки и управлять своей коллекцией.</p>
+      <div class="purchase-buttons">
+        <button class="purchase-btn purchase-btn-secondary" onclick="closePurchaseModal()">Отмена</button>
+        <button class="purchase-btn purchase-btn-primary" onclick="connectBusinessAccount()">Подключить аккаунт</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Upload Modal -->
+  <div class="upload-container" id="upload-container">
+    <div class="upload-header">
+      <div class="upload-title">Добавить новый подарок</div>
+      <button class="upload-close" onclick="closeUpload()">&times;</button>
+    </div>
+    <input type="file" id="upload-input" class="upload-input" accept="image/*">
+    <label for="upload-input" class="upload-label">Выбрать изображение</label>
+    <img id="upload-preview" class="upload-preview" src="" alt="Preview">
+    <button class="upload-confirm" id="upload-confirm">Добавить подарок</button>
+  </div>
+
+  <script>
+    // Подключаем Telegram Web Apps SDK
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-web-app.js';
+    document.head.appendChild(script);
+
+    // Текущая активная вкладка
+    let currentTab = 'market';
+    
+    // Элементы интерфейса
+    const headerTitle = document.getElementById('header-title');
+    const searchBtn = document.getElementById('search-btn');
+    const searchBar = document.getElementById('search-bar');
+    const cartBtn = document.getElementById('cart-btn');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadContainer = document.getElementById('upload-container');
+    const uploadInput = document.getElementById('upload-input');
+    const uploadPreview = document.getElementById('upload-preview');
+    const uploadConfirm = document.getElementById('upload-confirm');
+    const nftList = document.getElementById('nft-list');
+    const nftModal = document.getElementById('nft-modal');
+    const purchaseModal = document.getElementById('purchase-modal');
+    const modalBuyBtn = document.getElementById('modal-buy-btn');
+    
+    // Данные подарков
+    let nfts = [
+      {
+        id: 1,
+        name: 'Desk Calendar',
+        image: 'file:///C:/Users/podse/OneDrive/Pictures/Screenshots/Снимок%20экрана%202025-07-13%20211031.png',
+        price: 1250,
+        priceChange: -12,
+        model: 'Brain Freeze (3%)',
+        symbol: 'Autumn Leaves (2.4%)',
+        backdrop: 'Desert Sand (1.5%)',
+        mintable: '13 Days, 5 Hours, 7 Minutes',
+        isNew: true,
+        discount: 20
+      },
+      {
+        id: 2,
+        name: 'Durov Cap',
+        image: 'file:///C:/Users/podse/OneDrive/Pictures/Screenshots/Снимок%20экрана%202025-07-13%20214822.png',
+        price: 350,
+        priceChange: -5,
+        model: 'Classic Design (7%)',
+        symbol: 'Modern Art (5.2%)',
+        backdrop: 'Office Style (3.8%)',
+        mintable: '5 Days, 2 Hours, 45 Minutes',
+        isTrending: true
+      },
+      {
+        id: 3,
+        name: 'Diamond Ring',
+        image: 'file:///C:/Users/podse/OneDrive/Pictures/Screenshots/Снимок%20экрана%202025-07-13%20214731.png',
+        price: 6543,
+        priceChange: 3,
+        model: 'Luxury Edition (1%)',
+        symbol: 'Diamond Cut (0.8%)',
+        backdrop: 'Velvet Box (0.5%)',
+        mintable: '2 Days, 8 Hours, 12 Minutes'
+      },
+      {
+        id: 4,
+        name: 'Durov s Cap',
+        image: 'file:///C:/Users/podse/OneDrive/Pictures/Screenshots/Снимок%20экрана%202025-07-13%20215047.png',
+        price: 404564,
+        priceChange: -8,
+        model: 'Limited Edition (2%)',
+        symbol: 'Founder Style (1.5%)',
+        backdrop: 'Tech Background (1.2%)',
+        mintable: '7 Days, 1 Hour, 30 Minutes',
+        discount: 15
+      },
+      {
+        id: 5,
+        name: 'Vintage Cigar',
+        image: 'file:///C:/Users/podse/OneDrive/Pictures/Screenshots/Снимок%20экрана%202025-07-13%20215148.png',
+        price: 9870,
+        priceChange: 15,
+        model: 'Ancient Coin (4%)',
+        symbol: 'Golden Age (3.2%)',
+        backdrop: 'Treasure Chest (2.1%)',
+        mintable: '10 Days, 4 Hours, 20 Minutes',
+        isNew: true
+      },
+      {
+        id: 6,
+        name: 'Swiss Watch',
+        image: 'file:///C:/Users/podse/OneDrive/Pictures/Screenshots/Снимок%20экрана%202025-07-13%20215012.png',
+        price: 7800,
+        priceChange: -2,
+        model: 'Retro Style (5%)',
+        symbol: 'Mechanical (4.1%)',
+        backdrop: 'Wooden Table (3.3%)',
+        mintable: '3 Days, 6 Hours, 15 Minutes',
+        discount: 10
+      }
+    ];
+    
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+      renderNFTs();
+      
+      // Назначение обработчиков событий
+      searchBtn.addEventListener('click', toggleSearch);
+      cartBtn.addEventListener('click', showCart);
+      uploadBtn.addEventListener('click', openUpload);
+      uploadInput.addEventListener('change', handleImageUpload);
+      uploadConfirm.addEventListener('click', addNewNFT);
+      modalBuyBtn.addEventListener('click', buyFromModal);
+    });
+
+    // ========== Функции для работы с вкладками ==========
+    function switchTab(tab) {
+      // Скрыть все секции
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Скрыть поиск если был открыт
+      searchBar.style.display = 'none';
+      
+      // Убрать активное состояние у всех кнопок
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Показать выбранную секцию
+      document.getElementById(`${tab}-section`).classList.add('active');
+      
+      // Активировать соответствующую кнопку
+      document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+      
+      // Обновить заголовок
+      updateHeaderTitle(tab);
+      
+      // Запомнить текущую вкладку
+      currentTab = tab;
+    }
+    
+    function updateHeaderTitle(tab) {
+      const titles = {
+        'market': 'Маркет',
+        'auctions': 'Аукционы',
+        'mygifts': 'Мои подарки',
+        'gifi': 'GIFi',
+        'activity': 'Активность'
+      };
+      headerTitle.textContent = titles[tab];
+    }
+    
+    function toggleSearch() {
+      if (searchBar.style.display === 'none' || !searchBar.style.display) {
+        searchBar.style.display = 'block';
+        searchBar.querySelector('.search-input').focus();
+      } else {
+        searchBar.style.display = 'none';
+      }
+    }
+    
+    function showCart() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.showAlert('Ваша корзина пуста');
+      } else {
+        alert('Ваша корзина пуста');
+      }
+    }
+
+    // ========== Функции для работы с NFT ==========
+    function renderNFTs() {
+      nftList.innerHTML = '';
+      
+      nfts.forEach(nft => {
+        const nftCard = document.createElement('div');
+        nftCard.className = 'nft-card';
+        nftCard.onclick = () => showNFTDetails(nft);
+        
+        let badges = '';
+        if (nft.isNew) {
+          badges += '<span class="new-badge">НОВИНКА</span>';
+        }
+        if (nft.isTrending) {
+          badges += '<span class="trending-badge">ПОПУЛЯРНО</span>';
+        }
+        
+        let discountTag = '';
+        if (nft.discount) {
+          discountTag = `<div class="discount-tag">-${nft.discount}%</div>`;
+        }
+        
+        nftCard.innerHTML = `
+          <div class="nft-image-container">
+            ${discountTag}
+            <img src="${nft.image}" class="nft-image" alt="${nft.name}">
+            <div class="badge-container">
+              ${badges}
+            </div>
+          </div>
+          <div class="nft-info">
+            <div class="nft-name">${nft.name}</div>
+            <div class="nft-price">
+              <span class="price-value">${formatPrice(nft.price)} ₽</span>
+              <span class="price-change ${nft.priceChange > 0 ? 'price-up' : ''}">${nft.priceChange > 0 ? '▲' : '▼'} ${Math.abs(nft.priceChange)}%</span>
+            </div>
+            <button class="buy-btn" onclick="event.stopPropagation(); buyNFT(${nft.id})">Купить</button>
+          </div>
+        `;
+        
+        nftList.appendChild(nftCard);
+      });
+    }
+    
+    function formatPrice(price) {
+      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+    
+    function showNFTDetails(nft) {
+      document.getElementById('modal-title').textContent = nft.name;
+      document.getElementById('modal-image').src = nft.image;
+      document.getElementById('model-value').textContent = nft.model;
+      document.getElementById('symbol-value').textContent = nft.symbol;
+      document.getElementById('backdrop-value').textContent = nft.backdrop;
+      document.getElementById('mintable-value').textContent = nft.mintable;
+      modalBuyBtn.setAttribute('data-id', nft.id);
+      
+      openModal();
+    }
+    
+    function buyNFT(id) {
+      event.stopPropagation();
+      const nft = nfts.find(item => item.id === id);
+      if (!nft) return;
+      
+      showPurchaseModal(nft);
+    }
+    
+    function buyFromModal() {
+      const nftId = parseInt(modalBuyBtn.getAttribute('data-id'));
+      const nft = nfts.find(item => item.id === nftId);
+      if (nft) {
+        showPurchaseModal(nft);
+        closeModal();
+      }
+    }
+
+    // ========== Функции для модальных окон ==========
+    function openModal() {
+      nftModal.classList.add('active');
+    }
+    
+    function closeModal() {
+      nftModal.classList.remove('active');
+    }
+    
+    function showPurchaseModal(nft) {
+      document.getElementById('purchase-title').textContent = nft.name;
+      document.getElementById('purchase-image').src = nft.image;
+      document.getElementById('purchase-price').textContent = `${formatPrice(nft.price)} ₽`;
+      purchaseModal.classList.add('active');
+    }
+    
+    function closePurchaseModal() {
+      purchaseModal.classList.remove('active');
+    }
+
+    // ========== Функции для загрузки изображений ==========
+    function openUpload() {
+      uploadContainer.classList.add('active');
+    }
+    
+    function closeUpload() {
+      uploadContainer.classList.remove('active');
+      uploadPreview.src = '';
+      uploadPreview.classList.remove('active');
+      uploadConfirm.classList.remove('active');
+    }
+    
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadPreview.src = e.target.result;
+          uploadPreview.classList.add('active');
+          uploadConfirm.classList.add('active');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    function addNewNFT() {
+      if (!uploadPreview.src) return;
+      
+      const newId = nfts.length > 0 ? Math.max(...nfts.map(nft => nft.id)) + 1 : 1;
+      const newNFT = {
+        id: newId,
+        name: `Мой подарок #${newId}`,
+        image: uploadPreview.src,
+        price: Math.floor(Math.random() * 9000) + 1000,
+        priceChange: Math.floor(Math.random() * 20) - 10,
+        model: 'Custom Model',
+        symbol: 'Unique Symbol',
+        backdrop: 'Special Background',
+        mintable: 'Limited Edition',
+        isNew: true
+      };
+      
+      nfts.unshift(newNFT);
+      renderNFTs();
+      closeUpload();
+      
+      setTimeout(() => {
+        showNFTDetails(newNFT);
+      }, 300);
+    }
+
+    // ========== Общие функции ==========
+    function connectBusinessAccount() {
+      const message = 'Чтобы подключить Telegram Business аккаунт, откройте Telegram и перейдите в Настройки > Бизнес-аккаунт.';
+      
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.openLink('https://telegram.org/business');
+      } else {
+        alert(message);
+      }
+      
+      closePurchaseModal();
+    }
+
+    // ========== Обработчики событий ==========
+    document.addEventListener('click', function(event) {
+      if (!searchBar.contains(event.target) && event.target !== searchBtn) {
+        searchBar.style.display = 'none';
+      }
+      
+      if (nftModal.classList.contains('active') && 
+          !document.querySelector('.modal-content').contains(event.target) && 
+          !event.target.hasAttribute('data-id')) {
+        closeModal();
+      }
+      
+      if (purchaseModal.classList.contains('active') && 
+          !document.querySelector('.purchase-content').contains(event.target)) {
+        closePurchaseModal();
+      }
+      
+      if (uploadContainer.classList.contains('active') && 
+          !uploadContainer.contains(event.target) && 
+          event.target !== uploadBtn) {
+        closeUpload();
+      }
+    });
+    
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+        closePurchaseModal();
+        closeUpload();
+      }
+    });
+  </script>
+</body>
+</html>
